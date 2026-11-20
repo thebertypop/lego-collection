@@ -201,23 +201,23 @@ export function App() {
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors">
       {/* Barre supérieure */}
       <header className="sticky top-0 z-30 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xs border-b border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => {
               setActiveTab('collection');
               setSelectedCategoryId('ALL');
             }}
-            className="flex items-center gap-3 text-left group"
+            className="flex items-center gap-3.5 text-left group"
           >
-            {/* Logo sans cadre */}
+            {/* Logo en grand et sans cadre */}
             <img
               src={`${import.meta.env.BASE_URL}brickbybrick.svg`}
               alt="BRICKbyBRICK"
-              className="h-10 w-auto object-contain group-hover:scale-105 transition-transform"
+              className="h-14 sm:h-16 w-auto object-contain group-hover:scale-105 transition-transform"
             />
             <div>
-              <span className="font-extrabold text-lg tracking-tight block leading-tight text-zinc-900 dark:text-zinc-100">
+              <span className="font-extrabold text-xl tracking-tight block leading-tight text-zinc-900 dark:text-zinc-100">
                 BRICKbyBRICK
               </span>
               <span className="text-xs text-zinc-500 dark:text-zinc-400">{user.email}</span>
@@ -272,28 +272,17 @@ export function App() {
           </div>
         )}
 
-        {/* Bannière d'accueil (sans bouton Nouveau set) */}
-        <section className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-2xs">
-          <div>
-            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#FE5000]/10 text-[#FE5000] mb-2">
-              Tableau de bord personnel
-            </span>
-            <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
-              Bienvenue dans BRICKbyBRICK
-            </h1>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-              Suivez vos sets possédés, vos envies, vos budgets et vos catégories personnalisées.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={openCreateCategory}
-            className="sm:hidden self-start inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 text-xs font-semibold"
-          >
-            <FolderPlus className="w-4 h-4 text-[#FE5000]" />
-            Catégorie
-          </button>
+        {/* Bannière d'accueil centrée */}
+        <section className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 flex flex-col items-center justify-center text-center shadow-2xs">
+          <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#FE5000]/10 text-[#FE5000] mb-3">
+            Tableau de bord personnel
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Bienvenue dans BRICKbyBRICK
+          </h1>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1.5 max-w-2xl">
+            Suivez vos sets possédés, vos envies, vos budgets et vos catégories personnalisées.
+          </p>
         </section>
 
         {/* Statistiques principales */}
@@ -341,7 +330,7 @@ export function App() {
           ))}
         </section>
 
-        {/* Onglets Collection & Statistiques placés en dessous */}
+        {/* Onglets Collection & Statistiques */}
         <div className="border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-6">
           <button
             type="button"
@@ -374,7 +363,7 @@ export function App() {
           <StatsSection items={items} categories={categories} />
         ) : (
           <>
-            {/* Cartes de Catégories (avec miniature si présente) */}
+            {/* Cartes de Catégories : image ratio 250:107 au-dessus, puis titre + pastille + edit + suppression en dessous */}
             <section className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
@@ -393,7 +382,7 @@ export function App() {
                 <button
                   type="button"
                   onClick={() => setSelectedCategoryId('ALL')}
-                  className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between min-h-32 ${
+                  className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between min-h-44 ${
                     selectedCategoryId === 'ALL'
                       ? 'bg-[#FE5000] text-white border-[#FE5000] shadow-md'
                       : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-[#FE5000]'
@@ -418,73 +407,77 @@ export function App() {
                       key={cat.id}
                       onClick={() => setSelectedCategoryId(cat.id)}
                       style={{ borderColor: isSelected ? cat.color : undefined }}
-                      className={`group relative rounded-2xl border-2 bg-white dark:bg-zinc-900 cursor-pointer transition-all overflow-hidden flex flex-col justify-between p-4 shadow-2xs ${
+                      className={`group relative rounded-2xl border-2 bg-white dark:bg-zinc-900 cursor-pointer transition-all overflow-hidden flex flex-col justify-between shadow-2xs ${
                         isSelected
                           ? 'shadow-md'
                           : 'border-zinc-200 dark:border-zinc-800 hover:border-[#FE5000]/60'
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          {cat.image_url ? (
-                            <img
-                              src={cat.image_url}
-                              alt={cat.name}
-                              loading="lazy"
-                              className="w-12 h-8 rounded-lg object-contain bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shrink-0"
-                            />
-                          ) : (
-                            <span
-                              style={{ backgroundColor: cat.color }}
-                              className="w-3 h-3 rounded-full shrink-0"
-                            />
-                          )}
+                      {cat.image_url && (
+                        <div className="aspect-[250/107] w-full bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-center overflow-hidden">
+                          <img
+                            src={cat.image_url}
+                            alt={cat.name}
+                            loading="lazy"
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+
+                      <div className="p-4 flex-1 flex flex-col justify-between gap-3">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100 truncate block">
-                              {cat.name}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span
+                                style={{ backgroundColor: cat.color }}
+                                className="w-3 h-3 rounded-full shrink-0"
+                              />
+                              <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100 truncate">
+                                {cat.name}
+                              </span>
+                            </div>
                             {cat.description && (
-                              <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1">
+                              <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1 mt-1">
                                 {cat.description}
                               </p>
                             )}
                           </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditCategory(cat);
+                              }}
+                              title="Modifier cette catégorie"
+                              className="p-1.5 rounded-lg text-zinc-500 hover:text-[#FE5000] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCategory(cat.id, cat.name);
+                              }}
+                              title="Supprimer cette catégorie"
+                              className="p-1.5 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openEditCategory(cat);
-                            }}
-                            title="Modifier cette catégorie"
-                            className="p-1.5 rounded-lg text-zinc-500 hover:text-[#FE5000] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteCategory(cat.id, cat.name);
-                            }}
-                            title="Supprimer cette catégorie"
-                            className="p-1.5 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                        <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 pt-2.5 border-t border-zinc-200 dark:border-zinc-800">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                            {owned} pos.
+                          </span>
+                          <span>·</span>
+                          <span className="text-amber-600 dark:text-amber-400">{wish} souh.</span>
+                          <span>·</span>
+                          <span className="text-sky-600 dark:text-sky-400">{buy} ach.</span>
                         </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 pt-3 mt-3 border-t border-zinc-200 dark:border-zinc-800">
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                          {owned} pos.
-                        </span>
-                        <span>·</span>
-                        <span className="text-amber-600 dark:text-amber-400">{wish} souh.</span>
-                        <span>·</span>
-                        <span className="text-sky-600 dark:text-sky-400">{buy} ach.</span>
                       </div>
                     </div>
                   );
