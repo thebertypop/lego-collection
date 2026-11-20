@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  Blocks,
   Plus,
   Search,
   LogOut,
@@ -20,11 +19,21 @@ import { SetCard } from './components/sets/SetCard';
 import { AddSetModal } from './components/sets/AddSetModal';
 import { SetDetailModal } from './components/sets/SetDetailModal';
 import { AddCategoryModal } from './components/ui/AddCategoryModal';
+import { ResetPasswordModal } from './components/ui/ResetPasswordModal';
 import { StatsSection } from './components/stats/StatsSection';
 import type { Category, SetStatus, UserCollectionItem } from './types/database';
 
+const THEME_STORAGE_KEY = 'brickbybrick-theme';
+
 export function App() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const {
+    user,
+    loading: authLoading,
+    isPasswordRecovery,
+    clearPasswordRecovery,
+    signOut,
+  } = useAuth();
+
   const {
     items,
     categories,
@@ -42,7 +51,21 @@ export function App() {
 
   const [activeTab, setActiveTab] = useState<'collection' | 'stats'>('collection');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | 'ALL'>('ALL');
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(THEME_STORAGE_KEY) === 'dark';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (darkMode) {
+      root.classList.add('dark');
+      localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem(THEME_STORAGE_KEY, 'light');
+    }
+  }, [darkMode]);
 
   const [isAddSetOpen, setIsAddSetOpen] = useState(false);
   const [isCatModalOpen, setIsCatModalOpen] = useState(false);
@@ -56,14 +79,6 @@ export function App() {
   const [hideToBuy, setHideToBuy] = useState(false);
   const [retiredFilter, setRetiredFilter] = useState<'ALL' | 'ACTIVE' | 'RETIRED'>('ALL');
   const [sortBy, setSortBy] = useState<string>('created_desc');
-
-  const toggleTheme = () => {
-    setDarkMode((prev) => {
-      const next = !prev;
-      document.documentElement.classList.toggle('dark', next);
-      return next;
-    });
-  };
 
   const resetFilters = () => {
     setSearchTerm('');
@@ -141,13 +156,23 @@ export function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-100 dark:bg-zinc-950 text-zinc-600">
-        Chargement de votre espace LEGO...
+      <div className="min-h-screen flex items-center justify-center bg-zinc-100 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-300">
+        Chargement de BRICKbyBRICK...
       </div>
     );
   }
 
-  if (!user) return <AuthPage />;
+  if (!user) {
+    return (
+      <>
+        <AuthPage />
+        <ResetPasswordModal
+          isOpen={isPasswordRecovery}
+          onSuccess={clearPasswordRecovery}
+        />
+      </>
+    );
+  }
 
   const activeCategory = categories.find((c) => c.id === selectedCategoryId);
 
@@ -185,14 +210,16 @@ export function App() {
             }}
             className="flex items-center gap-3 text-left group"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#FE5000] text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-              <Blocks className="w-5 h-5" />
-            </div>
+            <img
+              src={`${import.meta.env.BASE_URL}brickbybrick.svg`}
+              alt="BRICKbyBRICK"
+              className="h-10 w-auto rounded-xl object-contain bg-white p-1 border border-zinc-200 dark:border-zinc-700 group-hover:scale-105 transition-transform"
+            />
             <div>
               <span className="font-extrabold text-lg tracking-tight block leading-tight">
-                My LEGO Collection
+                BRICKbyBRICK
               </span>
-              <span className="text-xs text-zinc-500">{user.email}</span>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">{user.email}</span>
             </div>
           </button>
 
@@ -217,18 +244,19 @@ export function App() {
 
             <button
               type="button"
-              onClick={toggleTheme}
-              title="Changer de thème"
-              className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              onClick={() => setDarkMode((prev) => !prev)}
+              title={darkMode ? 'Passer en mode jour' : 'Passer en mode nuit'}
+              aria-label={darkMode ? 'Passer en mode jour' : 'Passer en mode nuit'}
+              className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>
 
             <button
               type="button"
               onClick={signOut}
               title="Déconnexion"
-              className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-red-600"
+              className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-red-600 transition-colors"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -243,55 +271,36 @@ export function App() {
           </div>
         )}
 
-        {/* Bannière d'accueil + Navigation Collection / Statistiques */}
+        {/* Bannière d'accueil */}
         <section className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#FE5000]/10 text-[#FE5000] mb-2">
               Tableau de bord personnel
             </span>
             <h1 className="text-2xl font-extrabold tracking-tight">
-              Bienvenue dans votre collection LEGO
+              Bienvenue dans BRICKbyBRICK
             </h1>
-            <p className="text-sm text-zinc-500 mt-1">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
               Suivez vos sets possédés, vos envies, vos budgets et vos catégories personnalisées.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <div className="inline-flex rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1 border border-zinc-200 dark:border-zinc-700">
-              <button
-                type="button"
-                onClick={() => setActiveTab('collection')}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  activeTab === 'collection'
-                    ? 'bg-white dark:bg-zinc-900 text-[#FE5000] shadow-2xs'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                }`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                Collection
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('stats')}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  activeTab === 'stats'
-                    ? 'bg-white dark:bg-zinc-900 text-[#FE5000] shadow-2xs'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                }`}
-              >
-                <BarChart3 className="w-3.5 h-3.5" />
-                Statistiques
-              </button>
-            </div>
-
+          <div className="flex items-center gap-2.5 shrink-0">
             <button
               type="button"
               onClick={openCreateCategory}
-              className="sm:hidden inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 text-xs font-semibold"
+              className="sm:hidden inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-xs font-semibold"
             >
               <FolderPlus className="w-4 h-4 text-[#FE5000]" />
               Catégorie
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAddSetOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FE5000] hover:bg-[#e04600] text-white text-xs font-bold shadow-xs"
+            >
+              <Plus className="w-4 h-4" />
+              Nouveau set
             </button>
           </div>
         </section>
@@ -299,9 +308,9 @@ export function App() {
         {/* Statistiques principales */}
         <section className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
           {[
-            { label: 'Sets possédés', value: stats.ownedCount, accent: 'text-emerald-600' },
-            { label: 'Sets souhaités', value: stats.wishlistCount, accent: 'text-amber-600' },
-            { label: 'À acheter', value: stats.toBuyCount, accent: 'text-sky-600' },
+            { label: 'Sets possédés', value: stats.ownedCount, accent: 'text-emerald-600 dark:text-emerald-400' },
+            { label: 'Sets souhaités', value: stats.wishlistCount, accent: 'text-amber-600 dark:text-amber-400' },
+            { label: 'À acheter', value: stats.toBuyCount, accent: 'text-sky-600 dark:text-sky-400' },
             { label: 'Catégories', value: stats.categoriesCount, accent: 'text-[#FE5000]' },
             {
               label: 'Pièces possédées',
@@ -323,20 +332,49 @@ export function App() {
               key={stat.label}
               className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800"
             >
-              <p className="text-xs font-medium text-zinc-500">{stat.label}</p>
+              <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{stat.label}</p>
               <p className={`text-xl font-extrabold mt-1.5 ${stat.accent}`}>{stat.value}</p>
             </div>
           ))}
         </section>
 
+        {/* Onglets Collection & Statistiques placés en dessous */}
+        <div className="border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-6">
+          <button
+            type="button"
+            onClick={() => setActiveTab('collection')}
+            className={`pb-3.5 text-sm font-bold border-b-2 transition-colors inline-flex items-center gap-2 ${
+              activeTab === 'collection'
+                ? 'border-[#FE5000] text-[#FE5000]'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+            }`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            Collection
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('stats')}
+            className={`pb-3.5 text-sm font-bold border-b-2 transition-colors inline-flex items-center gap-2 ${
+              activeTab === 'stats'
+                ? 'border-[#FE5000] text-[#FE5000]'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Statistiques
+          </button>
+        </div>
+
         {activeTab === 'stats' ? (
           <StatsSection items={items} categories={categories} />
         ) : (
           <>
-            {/* Cartes de Catégories avec miniature et édition */}
+            {/* Cartes de Catégories */}
             <section className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-500">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                   Mes Catégories
                 </h2>
                 <button
@@ -377,73 +415,62 @@ export function App() {
                       key={cat.id}
                       onClick={() => setSelectedCategoryId(cat.id)}
                       style={{ borderColor: isSelected ? cat.color : undefined }}
-                      className={`group relative rounded-2xl border-2 bg-white dark:bg-zinc-900 cursor-pointer transition-all overflow-hidden flex flex-col justify-between ${
+                      className={`group relative rounded-2xl border-2 bg-white dark:bg-zinc-900 cursor-pointer transition-all overflow-hidden flex flex-col justify-between p-4 ${
                         isSelected
                           ? 'shadow-md'
                           : 'border-zinc-200 dark:border-zinc-800 hover:shadow-xs'
                       }`}
                     >
-                      {cat.image_url && (
-                        <div className="h-24 w-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden border-b border-zinc-100 dark:border-zinc-800">
-                          <img
-                            src={cat.image_url}
-                            alt={cat.name}
-                            loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </div>
-                      )}
-
-                      <div className="p-4 flex-1 flex flex-col justify-between gap-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <span className="flex items-center gap-2 font-bold text-sm">
-                              <span
-                                style={{ backgroundColor: cat.color }}
-                                className="w-3 h-3 rounded-full shrink-0"
-                              />
-                              <span className="truncate">{cat.name}</span>
-                            </span>
-                            {cat.description && (
-                              <p className="text-xs text-zinc-500 line-clamp-1 mt-1">
-                                {cat.description}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openEditCategory(cat);
-                              }}
-                              title="Modifier cette catégorie"
-                              className="p-1.5 rounded-lg text-zinc-400 hover:text-[#FE5000] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteCategory(cat.id, cat.name);
-                              }}
-                              title="Supprimer cette catégorie"
-                              className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="flex items-center gap-2 font-bold text-sm">
+                            <span
+                              style={{ backgroundColor: cat.color }}
+                              className="w-3 h-3 rounded-full shrink-0"
+                            />
+                            <span className="truncate">{cat.name}</span>
+                          </span>
+                          {cat.description && (
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1 mt-1">
+                              {cat.description}
+                            </p>
+                          )}
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                          <span className="text-emerald-600 font-semibold">{owned} pos.</span>
-                          <span>·</span>
-                          <span className="text-amber-600">{wish} souh.</span>
-                          <span>·</span>
-                          <span className="text-sky-600">{buy} ach.</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditCategory(cat);
+                            }}
+                            title="Modifier cette catégorie"
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-[#FE5000] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCategory(cat.id, cat.name);
+                            }}
+                            title="Supprimer cette catégorie"
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 pt-3 mt-3 border-t border-zinc-100 dark:border-zinc-800">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                          {owned} pos.
+                        </span>
+                        <span>·</span>
+                        <span className="text-amber-600 dark:text-amber-400">{wish} souh.</span>
+                        <span>·</span>
+                        <span className="text-sky-600 dark:text-sky-400">{buy} ach.</span>
                       </div>
                     </div>
                   );
@@ -545,34 +572,39 @@ export function App() {
               </div>
             </section>
 
-            {/* Grille des Sets */}
+            {/* En-tête catégorie sélectionnée (image 250x107px visible en entier) + Grille des Sets */}
             <section className="space-y-4">
               {activeCategory && (
-                <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
-                  <div className="flex items-center gap-3">
-                    {activeCategory.image_url ? (
-                      <img
-                        src={activeCategory.image_url}
-                        alt={activeCategory.name}
-                        className="w-12 h-12 rounded-xl object-cover border border-zinc-200 dark:border-zinc-700"
-                      />
-                    ) : (
-                      <span
-                        style={{ backgroundColor: activeCategory.color }}
-                        className="w-4 h-4 rounded-full shrink-0"
-                      />
+                <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+                  <div className="flex flex-wrap items-center gap-4">
+                    {activeCategory.image_url && (
+                      <div className="w-[250px] h-[107px] rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                        <img
+                          src={activeCategory.image_url}
+                          alt={activeCategory.name}
+                          className="w-[250px] h-[107px] object-contain"
+                        />
+                      </div>
                     )}
                     <div>
-                      <h2 className="text-lg font-extrabold">{activeCategory.name}</h2>
+                      <div className="flex items-center gap-2">
+                        <span
+                          style={{ backgroundColor: activeCategory.color }}
+                          className="w-3.5 h-3.5 rounded-full shrink-0"
+                        />
+                        <h2 className="text-xl font-extrabold">{activeCategory.name}</h2>
+                      </div>
                       {activeCategory.description && (
-                        <p className="text-xs text-zinc-500">{activeCategory.description}</p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                          {activeCategory.description}
+                        </p>
                       )}
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => openEditCategory(activeCategory)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-xs font-semibold hover:border-[#FE5000]"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 text-xs font-semibold hover:border-[#FE5000] transition-colors"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                     Modifier la catégorie
@@ -641,6 +673,11 @@ export function App() {
         }}
         onCreate={createCategory}
         onUpdate={updateCategory}
+      />
+
+      <ResetPasswordModal
+        isOpen={isPasswordRecovery}
+        onSuccess={clearPasswordRecovery}
       />
     </div>
   );

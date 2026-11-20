@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Package, Calendar, Layers, Euro, ExternalLink } from 'lucide-react';
+import { Check, Package, Calendar, Layers, Euro, ExternalLink, Sparkles, ShoppingCart } from 'lucide-react';
 import type { SetStatus, UserCollectionItem } from '../../types/database';
 
 interface SetCardProps {
@@ -11,25 +11,36 @@ interface SetCardProps {
 
 const STATUS_CONFIG: Record<
   SetStatus,
-  { label: string; badgeClass: string; borderClass: string }
+  {
+    label: string;
+    badgeClass: string;
+    borderClass: string;
+    activeBtnClass: string;
+  }
 > = {
   OWNED: {
     label: 'Possédé',
     badgeClass:
       'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800',
     borderClass: 'border-emerald-500/40',
+    activeBtnClass:
+      'bg-emerald-600 text-white border-emerald-600 shadow-2xs',
   },
   WISHLIST: {
     label: 'Souhaité',
     badgeClass:
       'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800',
     borderClass: 'border-amber-500/40',
+    activeBtnClass:
+      'bg-amber-500 text-white border-amber-500 shadow-2xs',
   },
   TO_BUY: {
     label: 'À acheter',
     badgeClass:
       'bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-950/70 dark:text-sky-300 dark:border-sky-800',
     borderClass: 'border-sky-500/40',
+    activeBtnClass:
+      'bg-sky-600 text-white border-sky-600 shadow-2xs',
   },
 };
 
@@ -144,47 +155,60 @@ export const SetCard: React.FC<SetCardProps> = ({
           </div>
         </div>
 
-        {/* Actions rapides (arrêt de propagation pour ne pas ouvrir la fiche détaillée) */}
+        {/* Actions rapides : 3 statuts complets + bouton détail */}
         <div
           onClick={(e) => e.stopPropagation()}
-          className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2"
+          className="pt-3 border-t border-zinc-100 dark:border-zinc-800 space-y-2"
         >
-          <label className="inline-flex items-center gap-2 cursor-pointer select-none text-xs font-semibold">
+          <div className="grid grid-cols-3 gap-1.5">
             <button
               type="button"
-              role="checkbox"
-              aria-checked={isOwned}
               onClick={() => onToggleOwned(item)}
-              className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
+              className={`inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors whitespace-nowrap ${
                 isOwned
-                  ? 'bg-emerald-600 border-emerald-600 text-white'
-                  : 'border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 hover:border-emerald-500'
+                  ? STATUS_CONFIG.OWNED.activeBtnClass
+                  : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-emerald-500'
               }`}
             >
-              {isOwned && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+              <Check className="w-3 h-3 shrink-0" />
+              <span>Possédé</span>
             </button>
-            <span>Possédé</span>
-          </label>
 
-          <div className="flex items-center gap-1.5">
-            <select
-              aria-label="Changer le statut du set"
-              value={status}
-              onChange={(e) => onChangeStatus(item, e.target.value as SetStatus)}
-              className="px-2 py-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-[11px] font-semibold focus:outline-none focus:ring-1 focus:ring-[#FE5000]"
+            <button
+              type="button"
+              onClick={() => onChangeStatus(item, 'WISHLIST')}
+              className={`inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors whitespace-nowrap ${
+                status === 'WISHLIST'
+                  ? STATUS_CONFIG.WISHLIST.activeBtnClass
+                  : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-amber-500'
+              }`}
             >
-              <option value="OWNED">Possédé</option>
-              <option value="WISHLIST">Souhaité</option>
-              <option value="TO_BUY">À acheter</option>
-            </select>
+              <Sparkles className="w-3 h-3 shrink-0" />
+              <span>Souhaité</span>
+            </button>
 
+            <button
+              type="button"
+              onClick={() => onChangeStatus(item, 'TO_BUY')}
+              className={`inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border text-[11px] font-semibold transition-colors whitespace-nowrap ${
+                status === 'TO_BUY'
+                  ? STATUS_CONFIG.TO_BUY.activeBtnClass
+                  : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-sky-500'
+              }`}
+            >
+              <ShoppingCart className="w-3 h-3 shrink-0" />
+              <span>À acheter</span>
+            </button>
+          </div>
+
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={() => onSelectSet(item)}
-              title="Voir les détails"
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-[#FE5000] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-400 hover:text-[#FE5000] transition-colors"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Fiche détaillée</span>
+              <ExternalLink className="w-3 h-3" />
             </button>
           </div>
         </div>

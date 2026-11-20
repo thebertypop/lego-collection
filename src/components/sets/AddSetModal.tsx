@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Pencil,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type {
@@ -219,10 +220,13 @@ export const AddSetModal: React.FC<AddSetModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
       <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl shadow-2xl overflow-hidden my-auto">
-        {/* En-tête */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
           <div className="flex items-center gap-2.5">
-            <span className="w-3 h-3 rounded-full bg-[#FE5000]" />
+            <img
+              src={`${import.meta.env.BASE_URL}brickbybrick.svg`}
+              alt="BRICKbyBRICK"
+              className="h-6 w-auto object-contain"
+            />
             <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
               Ajouter un set LEGO
             </h2>
@@ -236,7 +240,6 @@ export const AddSetModal: React.FC<AddSetModalProps> = ({
           </button>
         </div>
 
-        {/* Sélecteur mode API / Manuel */}
         <div className="flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-6 pt-3 gap-5">
           <button
             type="button"
@@ -370,6 +373,36 @@ export const AddSetModal: React.FC<AddSetModalProps> = ({
                     onChange={(e) => setNameFr(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm"
                   />
+                </div>
+              </div>
+
+              {/* URL d'image personnalisée (sans stockage lourd en BDD) */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5">
+                  URL d&apos;image du set (facultatif — remplace ou ajoute l&apos;image via lien)
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="flex-1 px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm"
+                  />
+                  <div className="w-14 h-14 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                    {imageUrl.trim() ? (
+                      <img
+                        src={imageUrl.trim()}
+                        alt="Aperçu du set"
+                        className="w-full h-full object-contain p-1"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <ImageIcon className="w-4 h-4 text-zinc-400" />
+                    )}
+                  </div>
                 </div>
               </div>
 
