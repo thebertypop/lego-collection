@@ -100,7 +100,7 @@ export const AuthPage: React.FC = () => {
             alt="BRICKbyBRICK"
             className="w-1/2 max-w-[200px] h-auto object-contain"
           />
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <h1 style={{ color: darkMode ? '#f4f4f5' : '#18181b' }} className="text-2xl sm:text-3xl font-extrabold tracking-tight !text-zinc-900 dark:!text-zinc-100">
             BRICKbyBRICK
           </h1>
           <p className="text-xs text-zinc-600 dark:text-zinc-400">
