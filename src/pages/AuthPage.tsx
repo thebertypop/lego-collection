@@ -69,23 +69,14 @@ export const AuthPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col justify-between p-4 sm:p-6 transition-colors">
-      {/* Barre haute avec bouton clair/nuit */}
-      <div className="max-w-md w-full mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <img
-            src={`${import.meta.env.BASE_URL}brickbybrick.svg`}
-            alt="BRICKbyBRICK"
-            className="h-9 w-auto object-contain"
-          />
-          <span className="font-extrabold text-base tracking-tight">BRICKbyBRICK</span>
-        </div>
-
+      {/* Barre haute : uniquement le bouton mode clair/nuit à droite */}
+      <div className="max-w-md w-full mx-auto flex items-center justify-end">
         <button
           type="button"
           onClick={() => setDarkMode((prev) => !prev)}
           title={darkMode ? 'Passer en mode jour' : 'Passer en mode nuit'}
           aria-label={darkMode ? 'Passer en mode jour' : 'Passer en mode nuit'}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:border-[#FE5000] transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-800 dark:text-zinc-100 hover:border-[#FE5000] transition-colors shadow-2xs"
         >
           {darkMode ? (
             <>
@@ -103,14 +94,16 @@ export const AuthPage: React.FC = () => {
 
       {/* Carte de connexion */}
       <div className="max-w-md w-full mx-auto my-auto bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-lg p-6 sm:p-8 space-y-6">
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-3 flex flex-col items-center">
           <img
             src={`${import.meta.env.BASE_URL}brickbybrick.svg`}
             alt="BRICKbyBRICK"
-            className="h-14 w-auto mx-auto object-contain"
+            className="w-1/2 max-w-[200px] h-auto object-contain"
           />
-          <h1 className="text-2xl font-extrabold tracking-tight">BRICKbyBRICK</h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+            BRICKbyBRICK
+          </h1>
+          <p className="text-xs text-zinc-600 dark:text-zinc-400">
             {mode === 'login' && 'Connectez-vous pour accéder à votre collection LEGO'}
             {mode === 'signup' && 'Créez votre compte pour gérer vos sets et catégories'}
             {mode === 'forgot' && 'Recevez un lien pour réinitialiser votre mot de passe'}
@@ -168,7 +161,9 @@ export const AuthPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold mb-1.5">Adresse e-mail</label>
+            <label className="block text-xs font-semibold mb-1.5 text-zinc-800 dark:text-zinc-200">
+              Adresse e-mail
+            </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -177,14 +172,16 @@ export const AuthPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="vous@exemple.com"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#FE5000]"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-[#FE5000]"
               />
             </div>
           </div>
 
           {mode !== 'forgot' && (
             <div>
-              <label className="block text-xs font-semibold mb-1.5">Mot de passe</label>
+              <label className="block text-xs font-semibold mb-1.5 text-zinc-800 dark:text-zinc-200">
+                Mot de passe
+              </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
@@ -194,7 +191,7 @@ export const AuthPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#FE5000]"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-[#FE5000]"
                 />
               </div>
             </div>
@@ -237,7 +234,7 @@ export const AuthPage: React.FC = () => {
                 setErrorMsg(null);
                 setInfoMsg(null);
               }}
-              className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-[#FE5000]"
+              className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-[#FE5000]"
             >
               Mot de passe oublié ?
             </button>
@@ -245,7 +242,7 @@ export const AuthPage: React.FC = () => {
         </div>
       </div>
 
-      <p className="text-center text-[11px] text-zinc-400">BRICKbyBRICK</p>
+      <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">BRICKbyBRICK</p>
     </div>
   );
 };

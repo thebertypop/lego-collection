@@ -7,8 +7,10 @@ import {
   AlertCircle,
   Pencil,
   Image as ImageIcon,
+  Sparkles,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { fetchOfficialLegoPrice } from '../../lib/officialPrice';
 import type {
   Category,
   RebrickableSearchResult,
@@ -38,6 +40,7 @@ export const AddSetModal: React.FC<AddSetModalProps> = ({
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<RebrickableSearchResult[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [fetchingPrice, setFetchingPrice] = useState(false);
 
   // Données du set (issues de l'API ou saisies manuellement)
   const [legoSetNumber, setLegoSetNumber] = useState('');
@@ -70,6 +73,7 @@ export const AddSetModal: React.FC<AddSetModalProps> = ({
     setSearching(false);
     setResults([]);
     setErrorMsg(null);
+    setFetchingPrice(false);
 
     setLegoSetNumber('');
     setNameEn('');
@@ -108,6 +112,37 @@ export const AddSetModal: React.FC<AddSetModalProps> = ({
     onClose();
   };
 
+  const handleFetchOfficialPrice = async (
+    targetSetNumber?: string,
+    silentIfNotFound = false
+  ) => {
+    const rawNum = (targetSetNumber ?? legoSetNumber).trim();
+    if (!rawNum) {
+      if (!silentIfNotFound) {
+        setErrorMsg("Renseignez d'abord le numéro LEGO du set.");
+      }
+      return;
+    }
+
+    setFetchingPrice(true);
+    if (!silentIfNotFound) {
+      setErrorMsg(null);
+    }
+
+    try {
+      const foundPrice = await fetchOfficialLegoPrice(rawNum);
+      if (foundPrice !== null) {
+        setOfficialPrice(String(foundPrice));
+      } else if (!silentIfNotFound) {
+        setErrorMsg(
+          'Prix officiel introuvable automatiquement pour ce set : vous pouvez le saisir à la main.'
+        );
+      }
+    } finally {
+      setFetchingPrice(false);
+    }
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
@@ -140,10 +175,13 @@ export const AddSetModal: React.FC<AddSetModalProps> = ({
     setYear(item.year ? String(item.year) : '');
     setPiecesCount(item.pieces_count ? String(item.pieces_count) : '');
     setTheme(item.theme || '');
+    setOfficialPrice('');
     setRebrickableUrl(item.rebrickable_url);
     setExternalUrl(item.external_url);
     setErrorMsg(null);
     setStep('preview');
+
+    void handleFetchOfficialPrice(item.lego_set_number, true);
   };
 
   const handleSaveSet = async (e: React.FormEvent) => {
@@ -428,14 +466,24 @@ export const AddSetModal: React.FC<AddSetModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5">
-                    Prix officiel (€)
-                  </label>
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <label className="block text-xs font-semibold">Prix officiel (€)</label>
+                    <button
+                      type="button"
+                      onClick={() => void handleFetchOfficialPrice()}
+                      disabled={fetchingPrice}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FE5000] hover:underline disabled:opacity-50"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {fetchingPrice ? 'Recherche...' : 'Auto'}
+                    </button>
+                  </div>
                   <input
                     type="number"
                     step="0.01"
                     value={officialPrice}
                     onChange={(e) => setOfficialPrice(e.target.value)}
+                    placeholder="Ex. : 49.99"
                     className="w-full px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm"
                   />
                 </div>

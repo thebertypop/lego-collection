@@ -7,8 +7,10 @@ import {
   Image as ImageIcon,
   CheckCircle2,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { fetchOfficialLegoPrice } from '../../lib/officialPrice';
 import type {
   Category,
   SetCondition,
@@ -52,6 +54,7 @@ export const SetDetailModal: React.FC<SetDetailModalProps> = ({
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [fetchingPrice, setFetchingPrice] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [savedNotice, setSavedNotice] = useState(false);
 
@@ -85,11 +88,35 @@ export const SetDetailModal: React.FC<SetDetailModalProps> = ({
     setPurchaseDate(item.purchase_date || '');
     setCondition(item.condition || 'NEW_SEALED');
     setNotes(item.notes || '');
+    setFetchingPrice(false);
     setErrorMsg(null);
     setSavedNotice(false);
   }, [item]);
 
   if (!item) return null;
+
+  const handleFetchOfficialPrice = async () => {
+    if (!legoSetNumber.trim()) {
+      setErrorMsg("Renseignez d'abord le numéro LEGO du set.");
+      return;
+    }
+
+    setFetchingPrice(true);
+    setErrorMsg(null);
+
+    try {
+      const foundPrice = await fetchOfficialLegoPrice(legoSetNumber);
+      if (foundPrice !== null) {
+        setOfficialPrice(String(foundPrice));
+      } else {
+        setErrorMsg(
+          'Prix officiel introuvable automatiquement pour ce set : vous pouvez le saisir à la main.'
+        );
+      }
+    } finally {
+      setFetchingPrice(false);
+    }
+  };
 
   const handleSaveAll = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -319,12 +346,24 @@ export const SetDetailModal: React.FC<SetDetailModalProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1.5">Prix officiel (€)</label>
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <label className="block text-xs font-semibold">Prix officiel (€)</label>
+                  <button
+                    type="button"
+                    onClick={() => void handleFetchOfficialPrice()}
+                    disabled={fetchingPrice}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FE5000] hover:underline disabled:opacity-50"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    {fetchingPrice ? 'Recherche...' : 'Auto'}
+                  </button>
+                </div>
                 <input
                   type="number"
                   step="0.01"
                   value={officialPrice}
                   onChange={(e) => setOfficialPrice(e.target.value)}
+                  placeholder="Ex. : 49.99"
                   className="w-full px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm"
                 />
               </div>
