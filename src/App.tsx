@@ -277,7 +277,7 @@ export function App() {
           <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#FE5000]/10 text-[#FE5000] mb-3">
             Tableau de bord personnel
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <h1 style={{ color: darkMode ? '#f4f4f5' : '#18181b' }} className="text-2xl sm:text-3xl font-extrabold tracking-tight !text-zinc-900 dark:!text-zinc-100">
             Bienvenue dans BRICKbyBRICK
           </h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1.5 max-w-2xl">
