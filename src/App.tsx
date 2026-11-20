@@ -20,6 +20,7 @@ import { AddSetModal } from './components/sets/AddSetModal';
 import { SetDetailModal } from './components/sets/SetDetailModal';
 import { AddCategoryModal } from './components/ui/AddCategoryModal';
 import { ResetPasswordModal } from './components/ui/ResetPasswordModal';
+import { BrandLogo } from './components/ui/BrandLogo';
 import { StatsSection } from './components/stats/StatsSection';
 import type { Category, SetStatus, UserCollectionItem } from './types/database';
 
@@ -210,10 +211,9 @@ export function App() {
             }}
             className="flex items-center gap-3.5 text-left group"
           >
-            {/* Logo en grand et sans cadre */}
-            <img
-              src={`${import.meta.env.BASE_URL}brickbybrick.svg`}
+            <BrandLogo
               alt="BRICKbyBRICK"
+              darkMode={darkMode}
               className="h-14 sm:h-16 w-auto object-contain group-hover:scale-105 transition-transform"
             />
             <div>
@@ -277,7 +277,10 @@ export function App() {
           <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#FE5000]/10 text-[#FE5000] mb-3">
             Tableau de bord personnel
           </span>
-          <h1 style={{ color: darkMode ? '#f4f4f5' : '#18181b' }} className="text-2xl sm:text-3xl font-extrabold tracking-tight !text-zinc-900 dark:!text-zinc-100">
+          <h1
+            style={{ color: darkMode ? '#f4f4f5' : '#18181b' }}
+            className="text-2xl sm:text-3xl font-extrabold tracking-tight !text-zinc-900 dark:!text-zinc-100"
+          >
             Bienvenue dans BRICKbyBRICK
           </h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1.5 max-w-2xl">

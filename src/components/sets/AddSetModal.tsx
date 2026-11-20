@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { fetchOfficialLegoPrice } from '../../lib/officialPrice';
+import { BrandLogo } from '../ui/BrandLogo';
 import type {
   Category,
   RebrickableSearchResult,
@@ -260,10 +261,9 @@ export const AddSetModal: React.FC<AddSetModalProps> = ({
       <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl shadow-2xl overflow-hidden my-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
           <div className="flex items-center gap-2.5">
-            <img
-              src={`${import.meta.env.BASE_URL}brickbybrick.svg`}
+            <BrandLogo
               alt="BRICKbyBRICK"
-              className="h-6 w-auto object-contain"
+              className="h-7 w-auto object-contain"
             />
             <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
               Ajouter un set LEGO

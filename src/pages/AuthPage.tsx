@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Moon, Sun, Mail, Lock, KeyRound, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { BrandLogo } from '../components/ui/BrandLogo';
 
 const THEME_STORAGE_KEY = 'brickbybrick-theme';
 
@@ -95,12 +96,15 @@ export const AuthPage: React.FC = () => {
       {/* Carte de connexion */}
       <div className="max-w-md w-full mx-auto my-auto bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-lg p-6 sm:p-8 space-y-6">
         <div className="text-center space-y-3 flex flex-col items-center">
-          <img
-            src={`${import.meta.env.BASE_URL}brickbybrick.svg`}
+          <BrandLogo
             alt="BRICKbyBRICK"
+            darkMode={darkMode}
             className="w-1/2 max-w-[200px] h-auto object-contain"
           />
-          <h1 style={{ color: darkMode ? '#f4f4f5' : '#18181b' }} className="text-2xl sm:text-3xl font-extrabold tracking-tight !text-zinc-900 dark:!text-zinc-100">
+          <h1
+            style={{ color: darkMode ? '#f4f4f5' : '#18181b' }}
+            className="text-2xl sm:text-3xl font-extrabold tracking-tight !text-zinc-900 dark:!text-zinc-100"
+          >
             BRICKbyBRICK
           </h1>
           <p className="text-xs text-zinc-600 dark:text-zinc-400">
