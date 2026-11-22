@@ -623,11 +623,11 @@ export function App() {
                     {/* Gauche : Image + Droite : Pastille + Nom */}
                     <div className="flex items-center gap-3.5 min-w-0">
                       {activeCategory.image_url && (
-                        <div className="w-28 sm:w-[220px] aspect-[250/107] rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                        <div className="w-28 sm:w-[220px] aspect-[250/107] rounded-xl bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 overflow-hidden shrink-0">
                           <img
                             src={activeCategory.image_url}
                             alt={activeCategory.name}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-cover"
                           />
                         </div>
                       )}
@@ -638,7 +638,10 @@ export function App() {
                             style={{ backgroundColor: activeCategory.color }}
                             className="w-3.5 h-3.5 rounded-full shrink-0"
                           />
-                          <h2 className="text-base sm:text-xl font-extrabold text-zinc-900 dark:text-zinc-100 truncate">
+                          <h2
+                            style={{ color: darkMode ? '#f4f4f5' : '#18181b' }}
+                            className="text-base sm:text-xl font-extrabold !text-zinc-900 dark:!text-zinc-100 truncate"
+                          >
                             {activeCategory.name}
                           </h2>
                         </div>
@@ -655,6 +658,7 @@ export function App() {
                       <button
                         type="button"
                         onClick={() => openEditCategory(activeCategory)}
+                        style={{ color: darkMode ? '#f4f4f5' : '#18181b' }}
                         className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold hover:border-[#FE5000] transition-colors"
                       >
                         <Pencil className="w-3.5 h-3.5" />
@@ -667,7 +671,8 @@ export function App() {
                         title="Changer de catégorie"
                         aria-label="Changer de catégorie"
                         aria-expanded={isCatDropdownOpen}
-                        className="p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-100 hover:border-[#FE5000] transition-colors"
+                        style={{ color: darkMode ? '#f4f4f5' : '#18181b' }}
+                        className="p-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 hover:border-[#FE5000] transition-colors"
                       >
                         <ChevronDown
                           className={`w-4 h-4 transition-transform ${
@@ -684,10 +689,13 @@ export function App() {
                       <button
                         type="button"
                         onClick={() => setSelectedCategoryId('ALL')}
-                        className="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/70 hover:border-[#FE5000] text-left text-xs font-bold transition-colors"
+                        style={{ color: darkMode ? '#f4f4f5' : '#18181b' }}
+                        className="flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/70 hover:border-[#FE5000] text-left text-xs font-bold transition-colors"
                       >
-                        <span className="inline-flex items-center gap-2 truncate">
-                          <LayoutGrid className="w-4 h-4 text-[#FE5000] shrink-0" />
+                        <span className="inline-flex items-center gap-2.5 truncate">
+                          <span className="w-12 aspect-[250/107] rounded-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center shrink-0">
+                            <LayoutGrid className="w-3.5 h-3.5 text-[#FE5000]" />
+                          </span>
                           <span className="truncate">Toute la collection</span>
                         </span>
                         <span className="text-[11px] text-zinc-500 shrink-0">{items.length}</span>
@@ -702,6 +710,11 @@ export function App() {
                             key={cat.id}
                             type="button"
                             onClick={() => setSelectedCategoryId(cat.id)}
+                            style={
+                              isCurrent
+                                ? undefined
+                                : { color: darkMode ? '#f4f4f5' : '#18181b' }
+                            }
                             className={`flex items-center justify-between gap-2.5 px-3 py-2 rounded-xl border text-left text-xs font-semibold transition-colors ${
                               isCurrent
                                 ? 'border-[#FE5000] bg-[#FE5000]/10 text-[#FE5000]'
@@ -709,17 +722,14 @@ export function App() {
                             }`}
                           >
                             <span className="flex items-center gap-2.5 min-w-0">
-                              {cat.image_url ? (
-                                <img
-                                  src={cat.image_url}
-                                  alt={cat.name}
-                                  className="w-10 h-5 rounded object-contain bg-white border border-zinc-200 dark:border-zinc-700 shrink-0"
-                                />
-                              ) : (
-                                <span
-                                  style={{ backgroundColor: cat.color }}
-                                  className="w-3 h-3 rounded-full shrink-0"
-                                />
+                              {cat.image_url && (
+                                <span className="w-12 aspect-[250/107] rounded-md overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0 block">
+                                  <img
+                                    src={cat.image_url}
+                                    alt={cat.name}
+                                    className="w-full h-full object-cover block"
+                                  />
+                                </span>
                               )}
                               <span
                                 style={{ backgroundColor: cat.color }}
