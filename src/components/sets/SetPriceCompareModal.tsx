@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Link as LinkIcon,
   BarChart3,
+  RefreshCw,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type {
@@ -46,9 +47,11 @@ export const SetPriceCompareModal: React.FC<SetPriceCompareModalProps> = ({
 }) => {
   const [offers, setOffers] = useState<SetPriceOffer[]>([]);
   const [history, setHistory] = useState<SetPriceHistoryPoint[]>([]);
+  const [resolvedOfficialPrice, setResolvedOfficialPrice] = useState<number | null>(null);
   const [includeShipping, setIncludeShipping] = useState(true);
   const [historyRange, setHistoryRange] = useState<HistoryRange>('30d');
   const [loading, setLoading] = useState(false);
+  const [fetchingPrices, setFetchingPrices] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
 
@@ -60,61 +63,6 @@ export const SetPriceCompareModal: React.FC<SetPriceCompareModalProps> = ({
   const [conditionInput, setConditionInput] = useState('Neuf');
   const [urlInput, setUrlInput] = useState('');
   const [submittingOffer, setSubmittingOffer] = useState(false);
-
-  const recordHistorySnapshot = useCallback(
-    async (setId: string, offerRows: SetPriceOffer[], officialPrice: number | null) => {
-      const candidatesBase: number[] = offerRows.map((o) => Number(o.price));
-      const candidatesShip: number[] = offerRows.map(
-        (o) => Number(o.price) + Number(o.shipping_price || 0)
-      );
-
-      if (officialPrice !== null && !Number.isNaN(Number(officialPrice))) {
-        candidatesBase.push(Number(officialPrice));
-        candidatesShip.push(Number(officialPrice));
-      }
-
-      if (candidatesBase.length === 0) return;
-
-      const lowestBase = Math.min(...candidatesBase);
-      const lowestShip = Math.min(...candidatesShip);
-
-      const { data: latestPoints } = await supabase
-        .from('set_price_history')
-        .select('*')
-        .eq('set_id', setId)
-        .order('recorded_at', { ascending: false })
-        .limit(1);
-
-      const latest = latestPoints?.[0];
-      const now = Date.now();
-      const twelveHoursMs = 12 * 60 * 60 * 1000;
-
-      const priceChanged =
-        !latest ||
-        Number(latest.lowest_price) !== lowestBase ||
-        Number(latest.lowest_price_with_shipping) !== lowestShip;
-
-      const isStale =
-        !latest || now - new Date(latest.recorded_at).getTime() > twelveHoursMs;
-
-      if (priceChanged || isStale) {
-        const { data: inserted } = await supabase
-          .from('set_price_history')
-          .insert({
-            set_id: setId,
-            lowest_price: lowestBase,
-            lowest_price_with_shipping: lowestShip,
-          })
-          .select()
-          .single();
-
-        if (inserted) {
-          setHistory((prev) => [...prev, inserted as SetPriceHistoryPoint]);
-        }
-      }
-    },
-    []
-  );
 
   const loadComparisonData = useCallback(async () => {
     if (!item) return;
@@ -139,26 +87,23 @@ export const SetPriceCompareModal: React.FC<SetPriceCompareModalProps> = ({
       if (offerErr) throw offerErr;
       if (histErr) throw histErr;
 
-      const cleanOffers = (offerRows || []) as SetPriceOffer[];
-      const cleanHistory = (histRows || []) as SetPriceHistoryPoint[];
-
-      setOffers(cleanOffers);
-      setHistory(cleanHistory);
-
-      await recordHistorySnapshot(
-        item.sets.id,
-        cleanOffers,
-        item.sets.official_price ?? null
-      );
+      setOffers((offerRows || []) as SetPriceOffer[]);
+      setHistory((histRows || []) as SetPriceHistoryPoint[]);
     } catch (err: any) {
       setErrorMsg(err.message || 'Impossible de charger le comparateur de prix.');
     } finally {
       setLoading(false);
     }
-  }, [item, recordHistorySnapshot]);
+  }, [item]);
 
   useEffect(() => {
     if (!item) return;
+    const rawOff = item.sets.official_price;
+    if (rawOff !== null && rawOff !== undefined && !Number.isNaN(Number(rawOff))) {
+      setResolvedOfficialPrice(Number(rawOff));
+    } else {
+      setResolvedOfficialPrice(null);
+    }
     setShowAddForm(false);
     setMerchantName('');
     setPriceInput('');
@@ -169,11 +114,7 @@ export const SetPriceCompareModal: React.FC<SetPriceCompareModalProps> = ({
     void loadComparisonData();
   }, [item, loadComparisonData]);
 
-  const officialPrice = useMemo(() => {
-    if (!item?.sets.official_price && item?.sets.official_price !== 0) return null;
-    const val = Number(item.sets.official_price);
-    return Number.isNaN(val) ? null : val;
-  }, [item]);
+  const officialPrice = resolvedOfficialPrice;
 
   const sortedOffers = useMemo<ComparableOffer[]>(() => {
     const list: ComparableOffer[] = offers.map((o) => {
@@ -218,11 +159,11 @@ export const SetPriceCompareModal: React.FC<SetPriceCompareModalProps> = ({
       const val = includeShipping
         ? Number(h.lowest_price_with_shipping)
         : Number(h.lowest_price);
-      if (!Number.isNaN(val)) values.push(val);
+      if (!Number.isNaN(val) && val > 0) values.push(val);
     }
     for (const o of sortedOffers) {
       const val = includeShipping ? o.totalWithShipping : o.price;
-      if (!Number.isNaN(val)) values.push(val);
+      if (!Number.isNaN(val) && val > 0) values.push(val);
     }
     if (values.length === 0) return null;
     return Math.min(...values);
@@ -266,6 +207,63 @@ export const SetPriceCompareModal: React.FC<SetPriceCompareModalProps> = ({
 
   if (!item) return null;
 
+  const handleFetchDirectPrices = async () => {
+    setFetchingPrices(true);
+    setErrorMsg(null);
+    setInfoMsg(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-set-prices', {
+        body: {
+          setId: item.sets.id,
+          legoSetNumber: item.sets.lego_set_number,
+          officialPrice,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setOffers((data?.offers || []) as SetPriceOffer[]);
+
+      if (data?.officialPrice !== undefined && data?.officialPrice !== null) {
+        const parsedOff = Number(data.officialPrice);
+        if (!Number.isNaN(parsedOff) && parsedOff > 0) {
+          setResolvedOfficialPrice(parsedOff);
+          item.sets.official_price = parsedOff;
+        }
+      }
+
+      const { data: histRows } = await supabase
+        .from('set_price_history')
+        .select('*')
+        .eq('set_id', item.sets.id)
+        .order('recorded_at', { ascending: true });
+      setHistory((histRows || []) as SetPriceHistoryPoint[]);
+
+      const count = Number(data?.fetchedCount || 0);
+      const blocked: string[] = data?.unavailableMerchants || [];
+
+      if (count > 0) {
+        setInfoMsg(
+          `${count} prix direct(s) récupéré(s)${
+            blocked.length > 0
+              ? ` (accès direct bloqué/absent sur : ${blocked.join(', ')})`
+              : ''
+          }.`
+        );
+      } else {
+        setInfoMsg(
+          'Aucun prix direct accessible automatiquement sur ces sites. Vous pouvez ajouter vos liens Leboncoin, Vinted ou marchands manuellement.'
+        );
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erreur lors de la récupération des prix.');
+    } finally {
+      setFetchingPrices(false);
+    }
+  };
+
   const handleAddOffer = async (e: React.FormEvent) => {
     e.preventDefault();
     const numericPrice = Number(priceInput);
@@ -305,7 +303,34 @@ export const SetPriceCompareModal: React.FC<SetPriceCompareModalProps> = ({
 
       const updatedOffers = [insertedOffer as SetPriceOffer, ...offers];
       setOffers(updatedOffers);
-      await recordHistorySnapshot(item.sets.id, updatedOffers, officialPrice);
+
+      const candidatesBase = updatedOffers
+        .map((o) => Number(o.price))
+        .filter((v) => !Number.isNaN(v) && v > 0);
+      const candidatesShip = updatedOffers
+        .map((o) => Number(o.price) + Number(o.shipping_price || 0))
+        .filter((v) => !Number.isNaN(v) && v > 0);
+
+      if (officialPrice !== null && officialPrice > 0) {
+        candidatesBase.push(officialPrice);
+        candidatesShip.push(officialPrice);
+      }
+
+      if (candidatesBase.length > 0) {
+        const { data: histInserted } = await supabase
+          .from('set_price_history')
+          .insert({
+            set_id: item.sets.id,
+            lowest_price: Math.min(...candidatesBase),
+            lowest_price_with_shipping: Math.min(...candidatesShip),
+          })
+          .select()
+          .single();
+
+        if (histInserted) {
+          setHistory((prev) => [...prev, histInserted as SetPriceHistoryPoint]);
+        }
+      }
 
       setMerchantName('');
       setPriceInput('');
@@ -357,7 +382,6 @@ export const SetPriceCompareModal: React.FC<SetPriceCompareModalProps> = ({
     };
   };
 
-  // Calcul coordonnées SVG du graphique d'historique
   const chartWidth = 520;
   const chartHeight = 140;
   const padX = 24;
@@ -470,22 +494,40 @@ export const SetPriceCompareModal: React.FC<SetPriceCompareModalProps> = ({
             </div>
           </div>
 
-          {/* Liste triée par ordre croissant + bouton ajouter un lien */}
+          {/* Liste triée par ordre croissant + récupération directe + ajout d'offre */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 inline-flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5 text-[#FE5000]" />
                 <span>Offres triées par prix croissant</span>
               </h3>
 
-              <button
-                type="button"
-                onClick={() => setShowAddForm((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FE5000] hover:bg-[#e04600] text-white text-xs font-bold transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Ajouter un lien / offre</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleFetchDirectPrices()}
+                  disabled={fetchingPrices}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-[#FE5000] text-zinc-800 dark:text-zinc-100 text-xs font-semibold transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 text-[#FE5000] ${
+                      fetchingPrices ? 'animate-spin' : ''
+                    }`}
+                  />
+                  <span>
+                    {fetchingPrices ? 'Récupération...' : 'Récupérer les prix'}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm((prev) => !prev)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FE5000] hover:bg-[#e04600] text-white text-xs font-bold transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Ajouter un lien / offre</span>
+                </button>
+              </div>
             </div>
 
             {showAddForm && (
@@ -592,8 +634,11 @@ export const SetPriceCompareModal: React.FC<SetPriceCompareModalProps> = ({
                 Chargement des offres...
               </div>
             ) : sortedOffers.length === 0 ? (
-              <div className="p-6 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 text-center text-xs text-zinc-500">
-                Aucune offre enregistrée pour ce set. Ajoutez un lien Leboncoin, Vinted ou marchand.
+              <div className="p-6 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 text-center text-xs text-zinc-500 space-y-2">
+                <p>Aucune offre enregistrée pour ce set.</p>
+                <p className="text-[11px] text-zinc-400">
+                  Cliquez sur « Récupérer les prix » ou « Ajouter un lien / offre » (Leboncoin, Vinted...).
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
