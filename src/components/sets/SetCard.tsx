@@ -5,7 +5,6 @@ import {
   Calendar,
   Layers,
   Euro,
-  ExternalLink,
   Sparkles,
   ShoppingCart,
   Gift,
@@ -17,6 +16,8 @@ interface SetCardProps {
   onSelectSet: (item: UserCollectionItem) => void;
   onToggleOwned: (item: UserCollectionItem) => void;
   onChangeStatus: (item: UserCollectionItem, newStatus: SetStatus) => void;
+  onOpenContent: (item: UserCollectionItem) => void;
+  onOpenCompare: (item: UserCollectionItem) => void;
 }
 
 const STATUS_CONFIG: Record<
@@ -59,11 +60,19 @@ export const SetCard: React.FC<SetCardProps> = ({
   onSelectSet,
   onToggleOwned,
   onChangeStatus,
+  onOpenContent,
+  onOpenCompare,
 }) => {
   const { sets: legoSet, categories: category, status } = item;
   const isOwned = status === 'OWNED';
   const statusStyle = STATUS_CONFIG[status];
   const isGift = Boolean(item.is_gift);
+
+  const missingList = item.missing_items || [];
+  const missingTotalQty = missingList.reduce(
+    (sum, entry) => sum + (Number(entry.quantity_missing) || 0),
+    0
+  );
 
   const displayNameFr = legoSet.name_fr || legoSet.name;
   const displayNameEn = legoSet.name;
@@ -172,14 +181,14 @@ export const SetCard: React.FC<SetCardProps> = ({
                     : undefined
                 }
                 className={`inline-flex items-center gap-1 ${
-                  isOwned ? 'font-bold text-[#FE5000]' : 'font-semibold text-zinc-700 dark:text-zinc-300'
+                  isOwned
+                    ? 'font-bold text-[#FE5000]'
+                    : 'font-semibold text-zinc-700 dark:text-zinc-300'
                 }`}
               >
                 {isOwned && <Euro className="w-3.5 h-3.5" />}
                 <span>Payé : {Number(item.purchase_price).toFixed(2)} €</span>
-                {isGift && (
-                  <Gift className="w-3.5 h-3.5 text-pink-500 shrink-0" />
-                )}
+                {isGift && <Gift className="w-3.5 h-3.5 text-pink-500 shrink-0" />}
               </span>
             )}
             {!hasPurchasePrice && isGift && (
@@ -202,7 +211,7 @@ export const SetCard: React.FC<SetCardProps> = ({
           </div>
         </div>
 
-        {/* Boutons de statut complets sans coupure */}
+        {/* Boutons de statut complets + barre Contenu / Comparer en bas */}
         <div
           onClick={(e) => e.stopPropagation()}
           className="pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2.5"
@@ -248,14 +257,32 @@ export const SetCard: React.FC<SetCardProps> = ({
             </button>
           </div>
 
-          <div className="flex justify-end">
+          <div className="grid grid-cols-2 gap-1.5 pt-0.5">
             <button
               type="button"
-              onClick={() => onSelectSet(item)}
-              className="inline-flex items-center gap-1 text-xs font-medium text-zinc-500 dark:text-zinc-400 hover:text-[#FE5000] transition-colors"
+              onClick={() => onOpenContent(item)}
+              className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                missingTotalQty > 0
+                  ? 'border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300'
+                  : 'border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/70 text-zinc-700 dark:text-zinc-200 hover:border-[#FE5000] hover:text-[#FE5000]'
+              }`}
             >
-              <span>Modifier / Fiche détaillée</span>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <Layers className="w-3.5 h-3.5 shrink-0" />
+              <span>Contenu</span>
+              {missingTotalQty > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-red-600 text-white text-[10px] font-bold">
+                  -{missingTotalQty}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onOpenCompare(item)}
+              className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/70 text-zinc-700 dark:text-zinc-200 hover:border-[#FE5000] hover:text-[#FE5000] text-xs font-semibold transition-colors"
+            >
+              <Euro className="w-3.5 h-3.5 shrink-0" />
+              <span>Comparer</span>
             </button>
           </div>
         </div>

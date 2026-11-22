@@ -20,6 +20,8 @@ import { AuthPage } from './pages/AuthPage';
 import { SetCard } from './components/sets/SetCard';
 import { AddSetModal } from './components/sets/AddSetModal';
 import { SetDetailModal } from './components/sets/SetDetailModal';
+import { SetContentModal } from './components/sets/SetContentModal';
+import { SetPriceCompareModal } from './components/sets/SetPriceCompareModal';
 import { AddCategoryModal } from './components/ui/AddCategoryModal';
 import { ResetPasswordModal } from './components/ui/ResetPasswordModal';
 import { BrandLogo } from './components/ui/BrandLogo';
@@ -92,6 +94,8 @@ export function App() {
   const [isCatModalOpen, setIsCatModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [activeItem, setActiveItem] = useState<UserCollectionItem | null>(null);
+  const [contentItem, setContentItem] = useState<UserCollectionItem | null>(null);
+  const [compareItem, setCompareItem] = useState<UserCollectionItem | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'MISSING' | SetStatus>('ALL');
@@ -789,6 +793,8 @@ export function App() {
                       onSelectSet={setActiveItem}
                       onToggleOwned={toggleOwned}
                       onChangeStatus={changeStatus}
+                      onOpenContent={setContentItem}
+                      onOpenCompare={setCompareItem}
                     />
                   ))}
                 </div>
@@ -813,6 +819,18 @@ export function App() {
         onClose={() => setActiveItem(null)}
         onUpdated={refresh}
         onDelete={removeItem}
+      />
+
+      <SetContentModal
+        item={contentItem}
+        onClose={() => setContentItem(null)}
+        onUpdated={refresh}
+      />
+
+      <SetPriceCompareModal
+        item={compareItem}
+        userId={user.id}
+        onClose={() => setCompareItem(null)}
       />
 
       <AddCategoryModal
