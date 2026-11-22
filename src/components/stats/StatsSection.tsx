@@ -18,7 +18,10 @@ export const StatsSection: React.FC<StatsSectionProps> = ({ items, categories })
     const itemsWithPaidPrice = items.filter(
       (i) => i.purchase_price !== null && i.purchase_price !== undefined && !Number.isNaN(Number(i.purchase_price))
     );
-    const totalSpent = itemsWithPaidPrice.reduce((acc, i) => acc + Number(i.purchase_price), 0);
+    const totalSpent = itemsWithPaidPrice.reduce(
+      (acc, i) => (i.is_gift ? acc : acc + Number(i.purchase_price)),
+      0
+    );
     const averagePrice = itemsWithPaidPrice.length > 0 ? totalSpent / itemsWithPaidPrice.length : 0;
 
     // Dépenses par catégorie (uniquement les sets avec prix payé renseigné)

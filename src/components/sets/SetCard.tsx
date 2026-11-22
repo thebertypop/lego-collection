@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Sparkles,
   ShoppingCart,
+  Gift,
 } from 'lucide-react';
 import type { SetStatus, UserCollectionItem } from '../../types/database';
 
@@ -62,6 +63,7 @@ export const SetCard: React.FC<SetCardProps> = ({
   const { sets: legoSet, categories: category, status } = item;
   const isOwned = status === 'OWNED';
   const statusStyle = STATUS_CONFIG[status];
+  const isGift = Boolean(item.is_gift);
 
   const displayNameFr = legoSet.name_fr || legoSet.name;
   const displayNameEn = legoSet.name;
@@ -158,23 +160,43 @@ export const SetCard: React.FC<SetCardProps> = ({
             )}
           </div>
 
-          {/* Prix : si possédé, affiche prix payé ET prix officiel */}
+          {/* Prix : prix payé (avec icône cadeau si cadeau) + prix officiel */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs pt-0.5">
-            {isOwned && hasPurchasePrice && (
-              <span className="inline-flex items-center gap-1 font-bold text-[#FE5000]">
-                <Euro className="w-3.5 h-3.5" />
-                Payé : {Number(item.purchase_price).toFixed(2)} €
+            {hasPurchasePrice && (
+              <span
+                title={
+                  isGift
+                    ? item.gift_from
+                      ? `Cadeau offert par ${item.gift_from}`
+                      : 'Cadeau'
+                    : undefined
+                }
+                className={`inline-flex items-center gap-1 ${
+                  isOwned ? 'font-bold text-[#FE5000]' : 'font-semibold text-zinc-700 dark:text-zinc-300'
+                }`}
+              >
+                {isOwned && <Euro className="w-3.5 h-3.5" />}
+                <span>Payé : {Number(item.purchase_price).toFixed(2)} €</span>
+                {isGift && (
+                  <Gift className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                )}
+              </span>
+            )}
+            {!hasPurchasePrice && isGift && (
+              <span
+                title={item.gift_from ? `Cadeau offert par ${item.gift_from}` : 'Cadeau'}
+                className="inline-flex items-center gap-1 font-semibold text-pink-600 dark:text-pink-400"
+              >
+                <Gift className="w-3.5 h-3.5 shrink-0" />
+                <span>Cadeau{item.gift_from ? ` · ${item.gift_from}` : ''}</span>
               </span>
             )}
             {hasOfficialPrice && (
               <span className="inline-flex items-center gap-1 font-medium text-zinc-700 dark:text-zinc-300">
-                {!isOwned && <Euro className="w-3.5 h-3.5 text-[#FE5000]" />}
+                {!isOwned && !hasPurchasePrice && (
+                  <Euro className="w-3.5 h-3.5 text-[#FE5000]" />
+                )}
                 Prix off. : {Number(legoSet.official_price).toFixed(2)} €
-              </span>
-            )}
-            {!isOwned && hasPurchasePrice && (
-              <span className="inline-flex items-center gap-1 font-semibold text-zinc-700 dark:text-zinc-300">
-                Payé : {Number(item.purchase_price).toFixed(2)} €
               </span>
             )}
           </div>

@@ -98,6 +98,7 @@ export function App() {
   const [hideOwned, setHideOwned] = useState(false);
   const [hideWishlist, setHideWishlist] = useState(false);
   const [hideToBuy, setHideToBuy] = useState(false);
+  const [hideRetired, setHideRetired] = useState(false);
   const [retiredFilter, setRetiredFilter] = useState<'ALL' | 'ACTIVE' | 'RETIRED'>('ALL');
   const [sortBy, setSortBy] = useState<string>('created_desc');
 
@@ -107,6 +108,7 @@ export function App() {
     setHideOwned(false);
     setHideWishlist(false);
     setHideToBuy(false);
+    setHideRetired(false);
     setRetiredFilter('ALL');
     setSortBy('created_desc');
   };
@@ -122,6 +124,7 @@ export function App() {
         if (hideOwned && item.status === 'OWNED') return false;
         if (hideWishlist && item.status === 'WISHLIST') return false;
         if (hideToBuy && item.status === 'TO_BUY') return false;
+        if (hideRetired && item.sets.retired) return false;
 
         if (retiredFilter === 'RETIRED' && !item.sets.retired) return false;
         if (retiredFilter === 'ACTIVE' && item.sets.retired) return false;
@@ -170,6 +173,7 @@ export function App() {
     hideOwned,
     hideWishlist,
     hideToBuy,
+    hideRetired,
     retiredFilter,
     searchTerm,
     sortBy,
@@ -597,6 +601,15 @@ export function App() {
                       className="rounded text-[#FE5000]"
                     />
                     <span>Masquer à acheter</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hideRetired}
+                      onChange={(e) => setHideRetired(e.target.checked)}
+                      className="rounded text-[#FE5000]"
+                    />
+                    <span>Masquer les sets retirés</span>
                   </label>
                 </div>
 

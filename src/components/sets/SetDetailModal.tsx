@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
+  Gift,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { fetchOfficialLegoPrice } from '../../lib/officialPrice';
@@ -50,6 +51,8 @@ export const SetDetailModal: React.FC<SetDetailModalProps> = ({
   const [purchasePrice, setPurchasePrice] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
   const [condition, setCondition] = useState<SetCondition | ''>('NEW_SEALED');
+  const [isGift, setIsGift] = useState(false);
+  const [giftFrom, setGiftFrom] = useState('');
   const [notes, setNotes] = useState('');
 
   const [saving, setSaving] = useState(false);
@@ -87,6 +90,8 @@ export const SetDetailModal: React.FC<SetDetailModalProps> = ({
     );
     setPurchaseDate(item.purchase_date || '');
     setCondition(item.condition || 'NEW_SEALED');
+    setIsGift(Boolean(item.is_gift));
+    setGiftFrom(item.gift_from || '');
     setNotes(item.notes || '');
     setFetchingPrice(false);
     setErrorMsg(null);
@@ -160,6 +165,8 @@ export const SetDetailModal: React.FC<SetDetailModalProps> = ({
           purchase_price: purchasePrice ? Number(purchasePrice) : null,
           purchase_date: purchaseDate || null,
           condition: status === 'OWNED' && condition ? condition : null,
+          is_gift: isGift,
+          gift_from: isGift ? giftFrom.trim() || null : null,
           notes: notes.trim() || null,
         })
         .eq('id', item.id);
@@ -451,6 +458,41 @@ export const SetDetailModal: React.FC<SetDetailModalProps> = ({
                   <option value="TO_VERIFY">À vérifier</option>
                 </select>
               </div>
+            </div>
+
+            {/* Option Cadeau + nom de la personne */}
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/50 p-3.5 space-y-3">
+              <label className="flex items-center justify-between gap-3 cursor-pointer">
+                <span className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+                  <Gift className="w-4 h-4 text-pink-500 shrink-0" />
+                  <span>Cadeau (non comptabilisé dans le total dépensé)</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={isGift}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsGift(checked);
+                    if (!checked) setGiftFrom('');
+                  }}
+                  className="rounded border-zinc-300 text-[#FE5000]"
+                />
+              </label>
+
+              {isGift && (
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5">
+                    Offert par
+                  </label>
+                  <input
+                    type="text"
+                    value={giftFrom}
+                    onChange={(e) => setGiftFrom(e.target.value)}
+                    placeholder="Prénom ou nom de la personne"
+                    className="w-full px-3.5 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm"
+                  />
+                </div>
+              )}
             </div>
 
             <div>

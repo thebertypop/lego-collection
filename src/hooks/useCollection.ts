@@ -140,10 +140,15 @@ export function useCollection(userId: string | undefined) {
     const toBuy = items.filter((i) => i.status === 'TO_BUY');
 
     const totalPieces = owned.reduce((acc, i) => acc + (i.sets?.pieces_count || 0), 0);
-    const totalSpent = owned.reduce(
-      (acc, i) => (i.purchase_price !== null ? acc + Number(i.purchase_price) : acc),
-      0
-    );
+    const totalSpent = items
+      .filter((item) => item.status === 'OWNED' && !item.is_gift)
+      .reduce((sum, item) => {
+        const price =
+          item.purchase_price !== null && item.purchase_price !== undefined
+          ? Number(item.purchase_price)
+          : 0;
+        return sum + (Number.isNaN(price) ? 0 : price);
+      }, 0);
     const officialValue = owned.reduce(
       (acc, i) => (i.sets?.official_price !== null ? acc + Number(i.sets.official_price) : acc),
       0

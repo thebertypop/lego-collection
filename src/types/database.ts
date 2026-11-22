@@ -55,6 +55,8 @@ export interface UserCollectionItem {
   updated_at: string;
   sets: LegoSet;
   categories: Category | null;
+  is_gift?: boolean;
+  gift_from?: string | null;
 }
 
 export interface RebrickableSearchResult {
